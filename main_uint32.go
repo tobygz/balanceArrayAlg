@@ -72,7 +72,11 @@ func improvedBalFun(ary []uint32, ary1 []uint32) ([]uint32, []uint32) {
                         }
                 }
         }
-        return bary, bary1
+        if !ok {
+                return ary, ary1
+        }else{
+                return bary, bary1
+        }
 }
 
 func getTotal(slc []uint32) uint32 {
@@ -86,9 +90,9 @@ func getTotal(slc []uint32) uint32 {
 func normalFun(ary []uint32) ([]uint32, []uint32) {
         slcA := make([]uint32, 0)
         slcB := make([]uint32, 0)
-
+        limitLen := len(ary) / 2
         for _, val := range ary {
-                if getTotal(slcA) > getTotal(slcB) {
+                if getTotal(slcA) > getTotal(slcB)  && len(slcB) < limitLen{
                         slcB = append(slcB, val)
                 } else {
                         slcA = append(slcA, val)
