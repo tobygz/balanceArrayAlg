@@ -5,29 +5,36 @@ import (
         "math"
 )
 
-func diff(ary []uint32, ary1 []uint32) uint32 {
+type Player struct {
+        score uint32
+        id    uint32
+}
+
+func (this *Player) GetStarForMatch() uint32 {
+        return this.score
+}
+
+func diff(ary []*Player, ary1 []*Player) uint32 {
         s1 := uint32(0)
-        for _, val := range ary {
-                s1 = s1 + val
+        for _, p := range ary {
+                s1 = s1 + p.GetStarForMatch()
         }
 
         s2 := uint32(0)
-        for _, val := range ary1 {
-                s2 = s2 + val
+        for _, p := range ary1 {
+                s2 = s2 + p.GetStarForMatch()
         }
         return uint32(math.Abs(float64(s2) - float64(s1)))
 }
 
-func doSwap(ary []uint32, ary1 []uint32, idx uint32) {
-        tmp := ary[idx]
-        ary[idx] = ary1[idx]
-        ary1[idx] = tmp
+func doSwap(ary []*Player, ary1 []*Player, idx uint32) {
+        ary[idx], ary1[idx] = ary1[idx], ary[idx]
 }
 
-func doImFun(ary []uint32, ary1 []uint32, swNum uint32, minDiff uint32) ([]uint32, []uint32, uint32, bool) {
+func doImFun(ary []*Player, ary1 []*Player, swNum uint32, minDiff uint32) ([]*Player, []*Player, uint32, bool) {
         i := uint32(0)
-        bestAry := make([]uint32, len(ary))
-        bestAry1 := make([]uint32, len(ary))
+        bestAry := make([]*Player, len(ary))
+        bestAry1 := make([]*Player, len(ary))
         bfind := false
         for {
                 //swap swNum
@@ -56,11 +63,11 @@ func doImFun(ary []uint32, ary1 []uint32, swNum uint32, minDiff uint32) ([]uint3
         }
 }
 
-func improvedBalFun(ary []uint32, ary1 []uint32) ([]uint32, []uint32) {
+func improvedBalFun(ary []*Player, ary1 []*Player) ([]*Player, []*Player) {
         lenv := uint32(len(ary) / 2)
         minDiff := diff(ary, ary1)
-        bary := make([]uint32, len(ary))
-        bary1 := make([]uint32, len(ary))
+        bary := make([]*Player, len(ary))
+        bary1 := make([]*Player, len(ary))
         df := uint32(0)
         ok := false
         for i := uint32(0); i < lenv; i++ {
@@ -74,40 +81,93 @@ func improvedBalFun(ary []uint32, ary1 []uint32) ([]uint32, []uint32) {
         }
         if !ok {
                 return ary, ary1
-        }else{
+        } else {
                 return bary, bary1
         }
 }
 
-func getTotal(slc []uint32) uint32 {
+func getTotal(slc []*Player) uint32 {
         ret := uint32(0)
-        for _, val := range slc {
-                ret = ret + val
+        for _, p := range slc {
+                ret = ret + p.GetStarForMatch()
         }
         return ret
 }
 
-func normalFun(ary []uint32) ([]uint32, []uint32) {
-        slcA := make([]uint32, 0)
-        slcB := make([]uint32, 0)
+func normalFun(ary []*Player) ([]*Player, []*Player) {
+        slcA := make([]*Player, 0)
+        slcB := make([]*Player, 0)
+
         limitLen := len(ary) / 2
-        for _, val := range ary {
-                if getTotal(slcA) > getTotal(slcB)  && len(slcB) < limitLen{
-                        slcB = append(slcB, val)
+        for _, p := range ary {
+                if getTotal(slcA) > getTotal(slcB) {
+                        if len(slcB) < limitLen {
+                                slcB = append(slcB, p)
+                        } else {
+                                slcA = append(slcA, p)
+                        }
                 } else {
-                        slcA = append(slcA, val)
+                        if len(slcA) < limitLen {
+                                slcA = append(slcA, p)
+                        } else {
+                                slcB = append(slcB, p)
+                        }
                 }
         }
         return slcA, slcB
 }
 
-func BestBalFun(ary []uint32) ([]uint32, []uint32) {
-        ary, ary1 := normalFun(ary)
-        ary, ary1 = improvedBalFun(ary, ary1)
-        return ary, ary1
+func BestBalFun(ary []*Player) ([]*Player, []*Player) {
+        debugStr := ""
+        for _, p := range ary {
+                debugStr = fmt.Sprintf("%s %d", debugStr, p.GetStarForMatch())
+        }
+        ary1, ary2 := normalFun(ary)
+        debugStr = fmt.Sprintf("%s; normalFun:[", debugStr)
+        for _, p := range ary1 {
+                debugStr = fmt.Sprintf("%s %d", debugStr, p.GetStarForMatch())
+        }
+        debugStr = fmt.Sprintf("%s; ", debugStr)
+        for _, p := range ary2 {
+                debugStr = fmt.Sprintf("%s %d", debugStr, p.GetStarForMatch())
+        }
+        debugStr = fmt.Sprintf("%s diff:%d] improveFun:[", debugStr, diff(ary1, ary2))
+
+        //fmt.Println(ary1, ary2)
+        ary1, ary2 = improvedBalFun(ary1, ary2)
+
+        for _, p := range ary1 {
+                debugStr = fmt.Sprintf("%s %d", debugStr, p.GetStarForMatch())
+        }
+        debugStr = fmt.Sprintf("%s; ", debugStr)
+        for _, p := range ary2 {
+                debugStr = fmt.Sprintf("%s %d", debugStr, p.GetStarForMatch())
+        }
+        debugStr = fmt.Sprintf("%s diff:%d]", debugStr, diff(ary1, ary2))
+        fmt.Println(debugStr)
+        return ary1, ary2
 }
 
 func main() {
-        ary := []uint32{18, 16, 15, 14, 8, 7, 3, 1}
+        /*
+                ary := []*Player{&Player{score: 18, id: 0},
+                        &Player{score: 16, id: 1},
+                        &Player{score: 15, id: 2},
+                        &Player{score: 14, id: 3},
+                        &Player{score: 8, id: 4},
+                        &Player{score: 7, id: 5},
+                        &Player{score: 3, id: 6},
+                        &Player{score: 1, id: 7}}
+        */
+        ary := []*Player{
+                &Player{score: 18, id: 0},
+                &Player{score: 16, id: 1},
+                &Player{score: 15, id: 2},
+                &Player{score: 14, id: 3},
+                &Player{score: 8, id: 4},
+                &Player{score: 7, id: 5},
+                &Player{score: 3, id: 6},
+                &Player{score: 1, id: 7}}
+
         fmt.Println(BestBalFun(ary))
 }
